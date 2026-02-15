@@ -281,7 +281,11 @@ const App: React.FC = () => {
 
     if (nextId <= 14 && nextId <= settings.maxUnlockableChapter) {
       if (progress.unlockedChapters.includes(nextId)) {
-        setProgress(prev => ({ ...prev, currentChapterId: nextId }));
+        setProgress(prev => {
+          const nextState = { ...prev, currentChapterId: nextId };
+          lastSavedProgress.current = JSON.stringify(nextState);
+          return nextState;
+        });
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setView(AppView.MAP);
@@ -292,10 +296,14 @@ const App: React.FC = () => {
   }, [progress.currentChapterId, progress.unlockedChapters, settings.maxUnlockableChapter]);
 
   const handleSaveReflection = React.useCallback((chapterId: number, text: string) => {
-    setJournal(prev => ({
-      ...prev,
-      [chapterId]: text
-    }));
+    setJournal(prev => {
+      const nextState = {
+        ...prev,
+        [chapterId]: text
+      };
+      lastSavedJournal.current = JSON.stringify(nextState);
+      return nextState;
+    });
   }, []);
 
   const handleAttemptFinal = (code: string) => {
