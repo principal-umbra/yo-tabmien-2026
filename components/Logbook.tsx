@@ -154,20 +154,6 @@ const Logbook: React.FC<LogbookProps> = ({ progress, onAttemptFinal }) => {
 
                         {/* Header Section */}
                         <div className="relative border-b border-white/10 pb-8">
-                            {/* Sticky Note - Element */}
-                            <div className="absolute -top-10 -left-6 md:-left-12 w-28 h-28 bg-[#E8DCC4] shadow-[0_5px_15px_rgba(0,0,0,0.3)] transform -rotate-3 flex flex-col items-center justify-center text-[#2c2c2c] z-20">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-4 bg-white/30 rotate-2 blur-[0.5px]"></div>
-                                <span className="material-symbols-outlined text-2xl mb-1 opacity-80">
-                                    {profile.element === 'Fuego' ? 'local_fire_department' :
-                                        profile.element === 'Aire' ? 'air' :
-                                            profile.element === 'Agua' ? 'water_drop' :
-                                                profile.element === 'Hielo' ? 'ac_unit' : 'lens_blur'}
-                                </span>
-                                <span className="font-serif italic text-xl border-b border-black/20 pb-1">{profile.element}</span>
-                            </div>
-
-
-
                             {/* Red Seal */}
                             <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4">
                                 <div className="w-16 h-16 bg-[#8B0018] rounded-full flex items-center justify-center shadow-[0_4px_6px_rgba(0,0,0,0.4),inset_0_-4px_4px_rgba(0,0,0,0.2)] border-2 border-[#5a0010]">
@@ -230,7 +216,7 @@ const Logbook: React.FC<LogbookProps> = ({ progress, onAttemptFinal }) => {
 
                     </div>
                 </div>
-            </div>
+            </div >
         );
     }
 
