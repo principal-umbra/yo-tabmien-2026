@@ -140,11 +140,23 @@ const DiaryPage: React.FC<{
   const [reflection, setReflection] = useState(initialReflection);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
 
-  // Sync with prop updates if needed (though usually initialReflection is good enough for page transitions)
+  // 1. Initial Load from journal entry
   useEffect(() => {
     setReflection(journalEntry || '');
-  }, [journalEntry]);
+  }, [chapterId]); // Only on actual chapter change
 
+  // 2. Real-time Sync from other devices
+  useEffect(() => {
+    // Only overwrite local state if we are currently "saved" (not locally dirty)
+    if (saveStatus === 'saved') {
+      const remoteValue = journalEntry || '';
+      if (remoteValue !== reflection) {
+        setReflection(remoteValue);
+      }
+    }
+  }, [journalEntry, saveStatus]);
+
+  // 3. Auto-save effect
   useEffect(() => {
     if (reflection === (journalEntry || '')) {
       setSaveStatus('saved');
@@ -156,7 +168,7 @@ const DiaryPage: React.FC<{
       setSaveStatus('saving');
       onSave(chapterId, reflection);
       setTimeout(() => setSaveStatus('saved'), 800);
-    }, 1500);
+    }, 4000); // 4s debounce to avoid interference
 
     return () => clearTimeout(timer);
   }, [reflection, chapterId, onSave, journalEntry]);
@@ -218,13 +230,18 @@ const BookReader: React.FC<BookReaderProps> = ({ chapter, progress, journal, onC
     }
   }, [viewIndex]);
 
+  // 1. Handle actual Chapter change
   useEffect(() => {
     setViewIndex(0);
     setRiddleInput('');
     setHint(null);
     setRiddleError(false);
+  }, [chapter.id]);
+
+  // 2. Handle background progress updates (e.g. cloud sync)
+  useEffect(() => {
     setIsCompleted(progress.completedChapters.includes(chapter.id));
-  }, [chapter.id, progress]);
+  }, [progress, chapter.id]);
 
   const storyPages = useMemo(() => getStoryPages(chapter.story, isMobile), [chapter.story, isMobile]);
   const textSpreadCount = Math.ceil((storyPages.length - 1) / 2);
