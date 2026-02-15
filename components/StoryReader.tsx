@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Chapter, UserProgress, UserJournal, SystemSettings } from '../types';
 import { getRiddleHint } from '../services/geminiService';
 import { loadSettings } from '../services/storageService';
+import { normalizeText } from '../services/textUtils';
 
 interface StoryReaderProps {
     chapter: Chapter;
@@ -76,8 +77,8 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
 
     const handleSubmitRiddle = (e: React.FormEvent) => {
         e.preventDefault();
-        const normalizedInput = riddleInput.trim().toLowerCase();
-        const normalizedAnswer = chapter.riddle.answer.trim().toLowerCase();
+        const normalizedInput = normalizeText(riddleInput);
+        const normalizedAnswer = normalizeText(chapter.riddle.answer);
 
         if (normalizedInput.includes(normalizedAnswer)) {
             setIsCompleted(true);

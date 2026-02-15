@@ -121,6 +121,30 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setDarkMode(!darkMode);
 
+
+  // 4. Auto-repair unlockedChapters when settings or completions change
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const nextUnlocked = CHAPTERS
+      .map(c => c.id)
+      .filter(id => {
+        if (id === 1) return true;
+        const prevCompleted = progress.completedChapters.includes(id - 1);
+        const withinLimit = id <= settings.maxUnlockableChapter;
+        return prevCompleted && withinLimit;
+      });
+
+    const hasNewUnlock = nextUnlocked.some(id => !progress.unlockedChapters.includes(id));
+
+    if (hasNewUnlock) {
+      setProgress(prev => ({
+        ...prev,
+        unlockedChapters: Array.from(new Set([...prev.unlockedChapters, ...nextUnlocked]))
+      }));
+    }
+  }, [settings.maxUnlockableChapter, progress.completedChapters, isAuthenticated]);
+
   const handleLogin = async (role: UserRole) => {
     setCurrentUserRole(role);
     setIsAuthenticated(true);
@@ -170,14 +194,7 @@ const App: React.FC = () => {
     if (!chapter) return;
 
     setProgress(prev => {
-      const nextId = chapterId + 1;
       const isNewCompletion = !prev.completedChapters.includes(chapterId);
-
-      const canUnlockNext = nextId <= 14 && nextId <= settings.maxUnlockableChapter;
-
-      const newUnlocked = isNewCompletion && canUnlockNext && !prev.unlockedChapters.includes(nextId)
-        ? [...prev.unlockedChapters, nextId]
-        : prev.unlockedChapters;
 
       const newCompleted = isNewCompletion
         ? [...prev.completedChapters, chapterId]
@@ -187,11 +204,31 @@ const App: React.FC = () => {
         ? [...prev.collectedFragments, chapter.fragmentCode]
         : prev.collectedFragments;
 
+      // Calculate which chapters SHOULD be unlocked
+      // A chapter is unlocked if:
+      // - It is chapter 1
+      // - OR the previous chapter is completed AND it's within the admin limit
+      const nextUnlocked = CHAPTERS
+        .map(c => c.id)
+        .filter(id => {
+          if (id === 1) return true;
+          const prevCompleted = newCompleted.includes(id - 1);
+          const withinLimit = id <= settings.maxUnlockableChapter;
+          return prevCompleted && withinLimit;
+        });
+
+      // Advance currentChapterId if the next one just got unlocked
+      let newCurrentId = prev.currentChapterId;
+      if (nextUnlocked.includes(chapterId + 1) && prev.currentChapterId === chapterId) {
+        newCurrentId = chapterId + 1;
+      }
+
       return {
         ...prev,
         completedChapters: newCompleted,
-        unlockedChapters: newUnlocked,
-        collectedFragments: newFragments
+        unlockedChapters: Array.from(new Set([...prev.unlockedChapters, ...nextUnlocked])),
+        collectedFragments: newFragments,
+        currentChapterId: newCurrentId
       };
     });
   };
