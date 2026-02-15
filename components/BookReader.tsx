@@ -241,8 +241,11 @@ const BookReader: React.FC<BookReaderProps> = ({ chapter, progress, journal, onC
 
   // 2. Handle background progress updates (e.g. cloud sync)
   useEffect(() => {
-    setIsCompleted(progress.completedChapters.includes(chapter.id));
-  }, [progress, chapter.id]);
+    const completed = progress.completedChapters.includes(chapter.id);
+    if (completed) {
+      setIsCompleted(true);
+    }
+  }, [progress.completedChapters, chapter.id]);
 
   const storyPages = useMemo(() => getStoryPages(chapter.story, isMobile), [chapter.story, isMobile]);
   const textSpreadCount = Math.ceil((storyPages.length - 1) / 2);

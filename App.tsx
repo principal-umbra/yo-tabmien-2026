@@ -170,15 +170,15 @@ const App: React.FC = () => {
     setView(AppView.STORY);
   };
 
-  // --- ELLA'S INTERACTION HANDLERS ---
+  // --- ELLA'S INTERACTION HANDLERS (Memoized) ---
 
-  const handleSelectChapter = (id: number) => {
+  const handleSelectChapter = React.useCallback((id: number) => {
     if (progress.unlockedChapters.includes(id)) {
       setProgress(prev => ({ ...prev, currentChapterId: id }));
     }
-  };
+  }, [progress.unlockedChapters]);
 
-  const handleReadChapter = (id: number) => {
+  const handleReadChapter = React.useCallback((id: number) => {
     if (progress.unlockedChapters.includes(id)) {
       const fullChapterData = loadChapterFromDB(id);
       if (fullChapterData) {
@@ -187,9 +187,9 @@ const App: React.FC = () => {
         setView(AppView.READER);
       }
     }
-  };
+  }, [progress.unlockedChapters]);
 
-  const handleChapterComplete = (chapterId: number) => {
+  const handleChapterComplete = React.useCallback((chapterId: number) => {
     const chapter = CHAPTERS.find(c => c.id === chapterId);
     if (!chapter) return;
 
@@ -204,10 +204,6 @@ const App: React.FC = () => {
         ? [...prev.collectedFragments, chapter.fragmentCode]
         : prev.collectedFragments;
 
-      // Calculate which chapters SHOULD be unlocked
-      // A chapter is unlocked if:
-      // - It is chapter 1
-      // - OR the previous chapter is completed AND it's within the admin limit
       const nextUnlocked = CHAPTERS
         .map(c => c.id)
         .filter(id => {
@@ -217,7 +213,6 @@ const App: React.FC = () => {
           return prevCompleted && withinLimit;
         });
 
-      // Advance currentChapterId if the next one just got unlocked
       let newCurrentId = prev.currentChapterId;
       if (nextUnlocked.includes(chapterId + 1) && prev.currentChapterId === chapterId) {
         newCurrentId = chapterId + 1;
@@ -231,9 +226,9 @@ const App: React.FC = () => {
         currentChapterId: newCurrentId
       };
     });
-  };
+  }, [settings.maxUnlockableChapter]);
 
-  const handleNextChapter = () => {
+  const handleNextChapter = React.useCallback(() => {
     const nextId = progress.currentChapterId + 1;
 
     if (nextId <= 14 && nextId <= settings.maxUnlockableChapter) {
@@ -246,14 +241,14 @@ const App: React.FC = () => {
     } else {
       setView(AppView.LOGBOOK);
     }
-  };
+  }, [progress.currentChapterId, progress.unlockedChapters, settings.maxUnlockableChapter]);
 
-  const handleSaveReflection = (chapterId: number, text: string) => {
+  const handleSaveReflection = React.useCallback((chapterId: number, text: string) => {
     setJournal(prev => ({
       ...prev,
       [chapterId]: text
     }));
-  };
+  }, []);
 
   const handleAttemptFinal = (code: string) => {
     const allCodesCollected = progress.collectedFragments.length === CHAPTERS.length;

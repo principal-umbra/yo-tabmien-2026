@@ -33,14 +33,19 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
         setRiddleInput('');
         setHint(null);
         setRiddleError(false);
-        setIsCompleted(progress.completedChapters.includes(chapter.id));
     }, [chapter.id]);
 
-    // 2. Handle Real-time Sync from other devices
+    // 2. Handle isCompleted reactivity to prop
     useEffect(() => {
-        // Only overwrite local state if:
-        // - We are currently "saved" (not locally dirty)
-        // - AND the remote value is actually different
+        const completed = progress.completedChapters.includes(chapter.id);
+        if (completed) {
+            setIsCompleted(true);
+        }
+    }, [progress.completedChapters, chapter.id]);
+
+    // 3. Handle Real-time Sync for reflection from other devices
+    useEffect(() => {
+        // Only overwrite local state if we are currently "saved" (not locally dirty)
         if (saveStatus === 'saved') {
             const remoteValue = journal[chapter.id] || '';
             if (remoteValue !== reflection) {
