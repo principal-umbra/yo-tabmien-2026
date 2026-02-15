@@ -237,6 +237,8 @@ const BookReader: React.FC<BookReaderProps> = ({ chapter, progress, journal, onC
     setRiddleInput('');
     setHint(null);
     setRiddleError(false);
+    // Explicitly set the initial completion state for the new chapter
+    setIsCompleted(progress.completedChapters.includes(chapter.id));
   }, [chapter.id]);
 
   // 2. Handle background progress updates (e.g. cloud sync)

@@ -33,7 +33,9 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
         setRiddleInput('');
         setHint(null);
         setRiddleError(false);
-    }, [chapter.id]);
+        // Explicitly set the initial completion state for the new chapter
+        setIsCompleted(progress.completedChapters.includes(chapter.id));
+    }, [chapter.id]); // Note: progress.completedChapters is intentionally excluded to prevent reset on background sync
 
     // 2. Handle isCompleted reactivity to prop
     useEffect(() => {
