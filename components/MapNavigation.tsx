@@ -161,13 +161,13 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                 >
                   {/* Glowing background for active/completed nodes */}
                   {(isCurrent || isCompleted) && (
-                    <div className={`amber-glow ${isCurrent ? 'opacity-30' : 'opacity-100'}`}></div>
+                    <div className={`amber-glow ${isCompleted ? 'opacity-100' : 'opacity-30'}`}></div>
                   )}
-                  {isCurrent && (
+                  {isCurrent && !isCompleted && (
                     <div className="absolute inset-0 bg-romance-red/20 dark:bg-red-900/20 blur-3xl rounded-full opacity-70 group-hover:opacity-100 transition-opacity"></div>
                   )}
                   {isCompleted && (
-                    <div className="absolute inset-0 bg-gold-accent/10 dark:bg-primary/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="absolute inset-0 bg-gold-accent/10 dark:bg-primary/5 blur-2xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity"></div>
                   )}
 
                   <div className="flex items-center gap-6 flex-col md:flex-row">
@@ -189,10 +189,10 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                           }
                         `}
                       >
-                        {isCurrent ? (
-                          <span className="material-symbols-outlined text-white dark:text-red-100 text-5xl drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">history_edu</span>
-                        ) : isCompleted ? (
+                        {isCompleted ? (
                           <span className="material-symbols-outlined text-gold-accent dark:text-primary text-4xl font-bold drop-shadow-[0_0_5px_rgba(212,175,55,0.8)]">landscape</span>
+                        ) : isCurrent ? (
+                          <span className="material-symbols-outlined text-white dark:text-red-100 text-5xl drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">history_edu</span>
                         ) : (
                           <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-xl">lock</span>
                         )}
