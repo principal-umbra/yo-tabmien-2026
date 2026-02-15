@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Chapter, UserProgress, UserJournal } from '../types';
 import { getRiddleHint } from '../services/geminiService';
-import { normalizeText } from '../services/textUtils';
+import { normalizeText, compareRiddle } from '../services/textUtils';
 
 interface BookReaderProps {
   chapter: Chapter;
@@ -285,10 +285,9 @@ const BookReader: React.FC<BookReaderProps> = ({ chapter, progress, journal, onC
   };
   const handleSubmitRiddle = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedInput = normalizeText(riddleInput);
-    const normalizedAnswer = normalizeText(chapter.riddle.answer);
+    const isCorrect = compareRiddle(riddleInput, chapter.riddle.answer);
 
-    if (normalizedInput.includes(normalizedAnswer)) {
+    if (isCorrect) {
       setIsCompleted(true);
       onComplete(chapter.id);
     } else {

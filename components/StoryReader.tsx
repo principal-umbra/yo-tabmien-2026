@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Chapter, UserProgress, UserJournal, SystemSettings } from '../types';
 import { getRiddleHint } from '../services/geminiService';
 import { loadSettings } from '../services/storageService';
-import { normalizeText } from '../services/textUtils';
+import { normalizeText, compareRiddle } from '../services/textUtils';
 
 interface StoryReaderProps {
     chapter: Chapter;
@@ -77,10 +77,9 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
 
     const handleSubmitRiddle = (e: React.FormEvent) => {
         e.preventDefault();
-        const normalizedInput = normalizeText(riddleInput);
-        const normalizedAnswer = normalizeText(chapter.riddle.answer);
+        const isCorrect = compareRiddle(riddleInput, chapter.riddle.answer);
 
-        if (normalizedInput.includes(normalizedAnswer)) {
+        if (isCorrect) {
             setIsCompleted(true);
             onComplete(chapter.id);
         } else {
@@ -225,6 +224,12 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
                                             />
                                             <span className="material-symbols-outlined absolute right-3 top-3 text-white/50">edit</span>
                                         </div>
+                                        <button
+                                            type="submit"
+                                            className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2 rounded-lg transition-colors border border-white/10 uppercase tracking-widest text-[10px]"
+                                        >
+                                            Confirmar Respuesta
+                                        </button>
                                     </form>
                                 )}
                                 {isCompleted && (
