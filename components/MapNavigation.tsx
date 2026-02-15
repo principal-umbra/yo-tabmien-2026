@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Chapter, UserProgress } from '../types';
+import { Chapter, UserProgress, SystemSettings } from '../types';
 import { CHAPTERS } from '../constants';
 import { loadSettings } from '../services/storageService';
 
@@ -8,10 +8,10 @@ interface MapNavigationProps {
   progress: UserProgress;
   onSelectChapter: (id: number) => void;
   onReadChapter: (id: number) => void;
+  settings: SystemSettings;
 }
 
-const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter, onReadChapter }) => {
-  const settings = loadSettings();
+const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter, onReadChapter, settings }) => {
   const completedCount = progress.completedChapters.length;
   const totalChapters = CHAPTERS.length;
   const progressPercent = Math.round((completedCount / totalChapters) * 100);

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { AppView } from '../types';
+import { AppView, SystemSettings } from '../types';
 import { loadSettings } from '../services/storageService';
 
 interface HeaderProps {
@@ -11,13 +11,13 @@ interface HeaderProps {
   resetProgress: () => void;
   currentChapterId: number;
   onLogout: () => void;
+  settings: SystemSettings;
 }
 
-const Header: React.FC<HeaderProps> = ({ darkMode, toggleTheme, currentView, setView, currentChapterId, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ darkMode, toggleTheme, currentView, setView, currentChapterId, onLogout, settings }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const settings = loadSettings(); // Load personalized data
 
   // Close dropdown when clicking outside
   useEffect(() => {

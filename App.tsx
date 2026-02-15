@@ -258,6 +258,7 @@ const App: React.FC = () => {
         resetProgress={clearAllData}
         currentChapterId={progress.currentChapterId}
         onLogout={handleLogout}
+        settings={settings}
       />
 
       <main className="flex-grow flex flex-col">
@@ -267,6 +268,7 @@ const App: React.FC = () => {
               progress={progress}
               onSelectChapter={handleSelectChapter}
               onReadChapter={handleReadChapter}
+              settings={settings}
             />
           </div>
         )}
@@ -280,6 +282,7 @@ const App: React.FC = () => {
               onComplete={(id) => handleChapterComplete(id)}
               onSaveReflection={handleSaveReflection}
               onNextChapter={handleNextChapter}
+              settings={settings}
             />
           </div>
         )}

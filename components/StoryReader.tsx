@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Chapter, UserProgress, UserJournal } from '../types';
+import { Chapter, UserProgress, UserJournal, SystemSettings } from '../types';
 import { getRiddleHint } from '../services/geminiService';
 import { loadSettings } from '../services/storageService';
 
@@ -11,9 +11,10 @@ interface StoryReaderProps {
     onComplete: (chapterId: number) => void;
     onSaveReflection: (chapterId: number, text: string) => void;
     onNextChapter: () => void;
+    settings: SystemSettings;
 }
 
-const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, onComplete, onSaveReflection, onNextChapter }) => {
+const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, onComplete, onSaveReflection, onNextChapter, settings }) => {
     const [reflection, setReflection] = useState(journal[chapter.id] || '');
     const [riddleInput, setRiddleInput] = useState('');
     const [hint, setHint] = useState<string | null>(null);
@@ -21,7 +22,6 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
     const [riddleError, setRiddleError] = useState(false);
     const [isCompleted, setIsCompleted] = useState(progress.completedChapters.includes(chapter.id));
 
-    const settings = loadSettings();
     const isAtLimit = chapter.id >= settings.maxUnlockableChapter;
 
     useEffect(() => {
