@@ -84,22 +84,49 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // --- PERSISTENCE & SYNC ---
+  const lastSavedProgress = React.useRef<string>("");
+  const lastSavedJournal = React.useRef<string>("");
+  const lastSavedSettings = React.useRef<string>("");
+
   // 2. Realtime Subscription
   useEffect(() => {
     const channel = supabase
       .channel('app_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'app_data' }, (payload) => {
         const { key, value } = payload.new as any;
-        if (key === 'progress') setProgress(value);
-        if (key === 'journal') setJournal(value);
-        if (key === 'settings') setSettings(value);
+        const incomingString = JSON.stringify(value);
+
+        if (key === 'progress') {
+          if (incomingString === lastSavedProgress.current) return;
+
+          setProgress(prev => {
+            // Smart Protection for Ella: Don't revert to a state with fewer completions
+            if (currentUserRole === 'Ella') {
+              const incomingCompletions = (value as UserProgress).completedChapters?.length || 0;
+              const currentCompletions = prev.completedChapters.length;
+              if (incomingCompletions < currentCompletions) return prev;
+            }
+            return value;
+          });
+        }
+
+        if (key === 'journal') {
+          if (incomingString === lastSavedJournal.current) return;
+          setJournal(value);
+        }
+
+        if (key === 'settings') {
+          if (incomingString === lastSavedSettings.current) return;
+          setSettings(value);
+        }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentUserRole]); // Added role as dependency to apply logic correctly
 
   // Update DOM for dark mode
   useEffect(() => {
@@ -111,11 +138,21 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   // Save persistence on change (ONLY FOR ELLA)
-  // We keep this to sync local changes to Supabase
   useEffect(() => {
     if (currentUserRole === 'Ella') {
-      saveProgress(progress);
-      saveJournal(journal);
+      const progressString = JSON.stringify(progress);
+      const journalString = JSON.stringify(journal);
+
+      // Only save if actually different from last known saved state
+      if (progressString !== lastSavedProgress.current) {
+        lastSavedProgress.current = progressString;
+        saveProgress(progress);
+      }
+
+      if (journalString !== lastSavedJournal.current) {
+        lastSavedJournal.current = journalString;
+        saveJournal(journal);
+      }
     }
   }, [progress, journal, currentUserRole]);
 
@@ -138,10 +175,12 @@ const App: React.FC = () => {
     const hasNewUnlock = nextUnlocked.some(id => !progress.unlockedChapters.includes(id));
 
     if (hasNewUnlock) {
-      setProgress(prev => ({
-        ...prev,
-        unlockedChapters: Array.from(new Set([...prev.unlockedChapters, ...nextUnlocked]))
-      }));
+      setProgress(prev => {
+        const newUnlocked = Array.from(new Set([...prev.unlockedChapters, ...nextUnlocked]));
+        const nextState = { ...prev, unlockedChapters: newUnlocked };
+        lastSavedProgress.current = JSON.stringify(nextState); // Pre-emptively update ref
+        return nextState;
+      });
     }
   }, [settings.maxUnlockableChapter, progress.completedChapters, isAuthenticated]);
 
