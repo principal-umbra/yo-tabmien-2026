@@ -37,9 +37,17 @@ const Logbook: React.FC<LogbookProps> = ({ progress, onAttemptFinal }) => {
     const totalChapters = CHAPTERS.length;
     const progressPercent = (completedCount / totalChapters) * 100;
 
+    const [isImageLoading, setIsImageLoading] = useState(false);
+
     React.useEffect(() => {
         setCurrentImage(null);
+        setIsImageLoading(true);
     }, [selectedSoul]);
+
+    const handleImageChange = (img: string) => {
+        setCurrentImage(img);
+        setIsImageLoading(true);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,13 +108,25 @@ const Logbook: React.FC<LogbookProps> = ({ progress, onAttemptFinal }) => {
                             <div className="relative bg-[#151515] p-2 border-2 border-[#8B7355] shadow-2xl rounded-sm">
                                 {/* Inner Gold Line */}
                                 <div className="border border-[#D4AF37]/30 p-1">
-                                    <div className="relative aspect-[3/4] overflow-hidden bg-[#0a0a0a]">
-                                        <div className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105 filter sepia-[0.2] contrast-[1.15]"
-                                            style={{ backgroundImage: `url("${displayImage}")` }}>
-                                        </div>
+                                    <div className="relative aspect-[3/4] overflow-hidden bg-[#0a0a0a] flex items-center justify-center">
+
+                                        {/* Loading Indicator */}
+                                        {isImageLoading && (
+                                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm animate-pulse">
+                                                <div className="w-12 h-12 border-2 border-gold-accent/20 border-t-gold-accent rounded-full animate-spin mb-4"></div>
+                                                <span className="text-[10px] uppercase tracking-[0.3em] text-gold-accent/60 font-cinzel">Invocando Memoria...</span>
+                                            </div>
+                                        )}
+
+                                        <img
+                                            src={displayImage}
+                                            onLoad={() => setIsImageLoading(false)}
+                                            className={`w-full h-full object-cover transition-all duration-1000 group-hover:scale-105 filter sepia-[0.2] contrast-[1.15] ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
+                                            alt={profile.characterName}
+                                        />
 
                                         {/* Gradient Overlay for Text */}
-                                        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/90 to-transparent"></div>
+                                        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"></div>
 
                                         {/* Name Overlay */}
                                         <div className="absolute bottom-6 left-0 right-0 text-center px-4">
@@ -135,11 +155,11 @@ const Logbook: React.FC<LogbookProps> = ({ progress, onAttemptFinal }) => {
                             {(galleryImages.length > 0 ? galleryImages : [selectedSoul.image, selectedSoul.image, selectedSoul.image]).slice(0, 3).map((img, i) => (
                                 <div
                                     key={i}
-                                    onClick={() => setCurrentImage(img)}
+                                    onClick={() => handleImageChange(img)}
                                     className={`w-20 h-24 bg-paper-white p-2 shadow-lg transform hover:-translate-y-4 transition-all duration-300 rotate-2 odd:-rotate-1 cursor-pointer group/thumb relative ${currentImage === img || (!currentImage && i === 0 && galleryImages.length > 0) ? 'ring-2 ring-gold-accent scale-110 z-10' : 'opacity-80 hover:opacity-100'}`}
                                 >
                                     <div className="w-full h-[80%] bg-gray-200 overflow-hidden grayscale group-hover/thumb:grayscale-0 transition-all">
-                                        <img src={img} className="w-full h-full object-cover" />
+                                        <img src={img} className="w-full h-full object-cover" loading="lazy" />
                                     </div>
                                     <div className="h-[20%] flex items-center justify-center">
                                         <span className="text-[6px] text-black font-serif italic opacity-60">fig. {i + 1}</span>
