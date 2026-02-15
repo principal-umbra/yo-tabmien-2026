@@ -181,10 +181,10 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                         onClick={() => !isLocked && onSelectChapter(chapter.id)}
                         className={`
                           rounded-full flex items-center justify-center relative z-20 transition-all cursor-pointer
-                          ${isCurrent
-                            ? 'size-24 bg-gradient-to-br from-romance-red to-black dark:from-red-900 dark:to-black border-2 border-romance-red dark:border-red-500 ring-4 ring-romance-red/20 dark:ring-red-900/30 pulse-intense shadow-glow-red'
-                            : isCompleted
-                              ? 'size-20 bg-white dark:bg-[#1a1a1a] border-2 border-gold-accent dark:border-primary shadow-glow-gold'
+                          ${isCompleted
+                            ? 'size-20 bg-white dark:bg-[#1a1a1a] border-2 border-gold-accent dark:border-primary shadow-glow-gold'
+                            : isCurrent
+                              ? 'size-24 bg-gradient-to-br from-romance-red to-black dark:from-red-900 dark:to-black border-2 border-romance-red dark:border-red-500 ring-4 ring-romance-red/20 dark:ring-red-900/30 pulse-intense shadow-glow-red'
                               : 'size-14 bg-paper-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-gray-700 shadow-sm'
                           }
                         `}
@@ -204,7 +204,7 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                           <span className="material-symbols-outlined text-sm font-bold">check</span>
                         </div>
                       )}
-                      {isCurrent && (
+                      {isCurrent && !isCompleted && (
                         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-romance-red to-black dark:from-red-900 dark:to-black text-white dark:text-red-100 px-4 py-1 rounded-full text-[10px] font-bold tracking-wider whitespace-nowrap border border-romance-red/50 dark:border-red-500/50 shadow-glow-red z-30">
                           VIDA ACTUAL
                         </div>
@@ -216,7 +216,15 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
 
                     {/* Content Box */}
                     <div className={`flex-1 order-2 ${isRight ? 'md:order-3 text-center md:text-left' : 'md:order-1 text-center md:text-right'}`}>
-                      {isCurrent ? (
+                      {isCompleted ? (
+                        <div className="bg-white/90 dark:bg-obsidian-gradient backdrop-blur-md border border-gold-accent/40 dark:border-primary/40 p-5 rounded-xl shadow-soft dark:shadow-panel relative overflow-hidden group-hover:border-gold-accent dark:group-hover:border-primary transition-colors cursor-pointer" onClick={() => onReadChapter(chapter.id)}>
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-gold-accent/10 dark:from-primary/10 to-transparent"></div>
+                          <span className="text-xs font-bold text-romance-dark dark:text-primary-dark uppercase tracking-widest mb-1 block">Alma {chapter.id}</span>
+                          <h3 className="text-xl font-cinzel font-bold text-text-main dark:text-gray-200 mb-1 drop-shadow-md">{chapter.title}</h3>
+                          <p className="text-sm text-text-light/70 dark:text-gray-400 mb-3 font-medium italic">{chapter.era}</p>
+                          <span className="text-[10px] font-bold text-gold-accent dark:text-primary uppercase tracking-widest border border-gold-accent/50 dark:border-primary/50 px-3 py-1 rounded-full bg-gold-accent/5 dark:bg-primary/5 inline-block hover:bg-gold-accent hover:text-white dark:hover:bg-primary dark:hover:text-black transition-colors">Revisar Memoria</span>
+                        </div>
+                      ) : isCurrent ? (
                         <div className="bg-peach-cream dark:bg-[#151515] border border-romance-red/60 dark:border-red-500/60 p-4 md:p-6 rounded-xl shadow-[0_0_30px_rgba(209,0,36,0.15)] relative overflow-hidden transform hover:-translate-y-1 transition-transform">
                           <span className="text-[10px] md:text-xs font-black text-romance-red dark:text-red-500 uppercase tracking-widest mb-1 block">Alma {chapter.id}</span>
                           <h3 className="text-lg md:text-2xl font-cinzel font-bold text-text-main dark:text-gray-100 mb-2 drop-shadow-md">{chapter.title}</h3>
@@ -228,14 +236,6 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                             <span>Continuar Viaje</span>
                             <span className="material-symbols-outlined text-sm">auto_stories</span>
                           </button>
-                        </div>
-                      ) : isCompleted ? (
-                        <div className="bg-white/90 dark:bg-obsidian-gradient backdrop-blur-md border border-gold-accent/40 dark:border-primary/40 p-5 rounded-xl shadow-soft dark:shadow-panel relative overflow-hidden group-hover:border-gold-accent dark:group-hover:border-primary transition-colors cursor-pointer" onClick={() => onReadChapter(chapter.id)}>
-                          <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-gold-accent/10 dark:from-primary/10 to-transparent"></div>
-                          <span className="text-xs font-bold text-romance-dark dark:text-primary-dark uppercase tracking-widest mb-1 block">Alma {chapter.id}</span>
-                          <h3 className="text-xl font-cinzel font-bold text-text-main dark:text-gray-200 mb-1 drop-shadow-md">{chapter.title}</h3>
-                          <p className="text-sm text-text-light/70 dark:text-gray-400 mb-3 font-medium italic">{chapter.era}</p>
-                          <span className="text-[10px] font-bold text-gold-accent dark:text-primary uppercase tracking-widest border border-gold-accent/50 dark:border-primary/50 px-3 py-1 rounded-full bg-gold-accent/5 dark:bg-primary/5 inline-block hover:bg-gold-accent hover:text-white dark:hover:bg-primary dark:hover:text-black transition-colors">Revisar Memoria</span>
                         </div>
                       ) : (
                         <div className="bg-white/40 dark:bg-obsidian-gradient border border-black/5 dark:border-white/5 p-4 rounded-xl">
@@ -252,6 +252,27 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                 </div>
               );
             })}
+
+            {/* Coming Soon Section */}
+            <div className="relative mt-12 py-10 flex flex-col items-center animate-fade-in-up">
+              <div className="w-1.5 h-1.5 bg-gold-accent/40 rounded-full mb-4"></div>
+              <div className="w-1.5 h-1.5 bg-gold-accent/20 rounded-full mb-12"></div>
+
+              <div className="bg-white/40 dark:bg-black/40 backdrop-blur-md border border-gold-accent/20 dark:border-primary/20 p-8 rounded-2xl text-center max-w-sm relative group overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-gold-accent/5 to-transparent pointer-events-none"></div>
+                <span className="material-symbols-outlined text-gold-accent/40 dark:text-primary/40 text-5xl mb-4 block group-hover:scale-110 transition-transform duration-700">hourglass_top</span>
+                <h4 className="font-cinzel text-lg font-bold text-text-main dark:text-gray-200 mb-2 tracking-widest">El Sendero Continúa</h4>
+                <div className="h-px w-12 bg-gold-accent/30 mx-auto my-4"></div>
+                <p className="font-serif italic text-sm text-text-light/70 dark:text-gray-400 leading-relaxed px-4">
+                  El archivo del alma está procesando nuevas memorias. Pronto, el destino revelará más capítulos de vuestro viaje.
+                </p>
+                <div className="mt-6 flex justify-center gap-2">
+                  <span className="w-1 h-1 bg-gold-accent/30 rounded-full"></span>
+                  <span className="w-1 h-1 bg-gold-accent/30 rounded-full"></span>
+                  <span className="w-1 h-1 bg-gold-accent/30 rounded-full"></span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
