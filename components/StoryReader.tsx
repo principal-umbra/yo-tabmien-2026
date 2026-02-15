@@ -24,13 +24,47 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
 
     const isAtLimit = chapter.id >= settings.maxUnlockableChapter;
 
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+
+    // 1. Handle Chapter Changes (Initial Load)
     useEffect(() => {
         setReflection(journal[chapter.id] || '');
         setRiddleInput('');
         setHint(null);
         setRiddleError(false);
         setIsCompleted(progress.completedChapters.includes(chapter.id));
-    }, [chapter.id, progress, journal]);
+    }, [chapter.id]);
+
+    // 2. Handle Real-time Sync from other devices
+    useEffect(() => {
+        // Only overwrite local state if:
+        // - We are currently "saved" (not locally dirty)
+        // - AND the remote value is actually different
+        if (saveStatus === 'saved') {
+            const remoteValue = journal[chapter.id] || '';
+            if (remoteValue !== reflection) {
+                setReflection(remoteValue);
+            }
+        }
+    }, [journal, chapter.id, saveStatus]); // Depend on journal, chapter.id, and saveStatus for sync
+
+    // 3. Auto-save effect
+    useEffect(() => {
+        if (reflection === (journal[chapter.id] || '')) {
+            setSaveStatus('saved');
+            return;
+        }
+
+        setSaveStatus('unsaved');
+        const timer = setTimeout(() => {
+            setSaveStatus('saving');
+            onSaveReflection(chapter.id, reflection);
+            setTimeout(() => setSaveStatus('saved'), 800); // Fake delay for visual feedback
+        }, 4000); // Increased 4s debounce to avoid interference
+
+        return () => clearTimeout(timer);
+    }, [reflection, chapter.id, onSaveReflection]);
+
 
     const handleGetHint = async () => {
         if (hint) return;
@@ -53,26 +87,6 @@ const StoryReader: React.FC<StoryReaderProps> = ({ chapter, progress, journal, o
             setTimeout(() => setRiddleError(false), 2000);
         }
     };
-
-    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
-
-    // Auto-save effect
-    useEffect(() => {
-        if (reflection === (journal[chapter.id] || '')) {
-            setSaveStatus('saved');
-            return;
-        }
-
-        setSaveStatus('unsaved');
-        const timer = setTimeout(() => {
-            setSaveStatus('saving');
-            onSaveReflection(chapter.id, reflection);
-            setTimeout(() => setSaveStatus('saved'), 800); // Fake delay for visual feedback
-        }, 1500); // 1.5s debounce
-
-        return () => clearTimeout(timer);
-    }, [reflection, chapter.id, onSaveReflection]);
-
 
     const handleManualSave = () => {
         onSaveReflection(chapter.id, reflection);
