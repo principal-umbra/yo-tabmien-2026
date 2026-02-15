@@ -113,8 +113,10 @@ const MapNavigation: React.FC<MapNavigationProps> = ({ progress, onSelectChapter
                       style={{ backgroundImage: isUnlocked ? `url("${chapter.image}")` : undefined }}
                     >
                       {isUnlocked && (
-                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-white dark:bg-black border border-gold-accent dark:border-primary text-text-main dark:text-primary text-[9px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg font-serif">
+                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white dark:bg-black border border-gold-accent dark:border-primary text-text-main dark:text-primary text-[10px] px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 shadow-xl font-serif transform group-hover:-translate-y-1">
                           {chapter.title}
+                          {/* Tooltip Arrow */}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gold-accent dark:border-t-primary"></div>
                         </div>
                       )}
                       {!isUnlocked && !isCurrent && (
