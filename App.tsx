@@ -38,6 +38,7 @@ const App: React.FC = () => {
   const [progress, setProgress] = useState<UserProgress>(INITIAL_PROGRESS_DB);
   const [journal, setJournal] = useState<UserJournal>(INITIAL_JOURNAL_DB);
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SYSTEM_SETTINGS);
+  const [isReady, setIsReady] = useState(false); // New: Initialization Shield
 
   const [bookReaderData, setBookReaderData] = useState<Chapter | null>(null);
 
@@ -69,10 +70,16 @@ const App: React.FC = () => {
         setProgress(loadedProgress);
         setJournal(loadedJournal);
 
+        // Prime the refs with loaded data to prevent redundant initial saves
+        lastSavedProgress.current = JSON.stringify(loadedProgress);
+        lastSavedJournal.current = JSON.stringify(loadedJournal);
+        lastSavedSettings.current = JSON.stringify(loadedSettings);
+
       } catch (error) {
         console.error("Initialization error:", error);
       } finally {
         setIsLoading(false);
+        setIsReady(true); // Open the shield
       }
     };
 
@@ -139,6 +146,8 @@ const App: React.FC = () => {
 
   // Save persistence on change (ONLY FOR ELLA)
   useEffect(() => {
+    if (!isReady) return; // THE SHIELD: Never save while initializing
+
     if (currentUserRole === 'Ella') {
       const progressString = JSON.stringify(progress);
       const journalString = JSON.stringify(journal);
