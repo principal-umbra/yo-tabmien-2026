@@ -1,16 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { AppView, UserProgress, UserJournal, Chapter, UserRole } from './types';
+import { AppView, UserProgress, UserJournal, Chapter, UserRole, SystemSettings } from './types';
 import { CHAPTERS } from './constants';
 import {
   loadProgress, saveProgress,
   loadJournal, saveJournal,
   clearAllData, loadSettings,
-  loadSession, saveSession, clearSession
+  loadSession, saveSession, clearSession,
+  saveSettings
 } from './services/storageService';
 import { loadChapterFromDB } from './services/databaseService';
 import { INITIAL_PROGRESS_DB } from './data/db/progress.db';
 import { INITIAL_JOURNAL_DB } from './data/db/journal.db';
+import { DEFAULT_SYSTEM_SETTINGS } from './data/system/settings.db';
+import { supabase } from './services/supabaseClient';
 
 // Components
 import Header from './components/Header';
@@ -29,37 +32,73 @@ const App: React.FC = () => {
   // View State
   const [view, setView] = useState<AppView>(AppView.STORY);
   const [darkMode, setDarkMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // DATA STATE (Split DBs)
   const [progress, setProgress] = useState<UserProgress>(INITIAL_PROGRESS_DB);
   const [journal, setJournal] = useState<UserJournal>(INITIAL_JOURNAL_DB);
+  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SYSTEM_SETTINGS);
 
   const [bookReaderData, setBookReaderData] = useState<Chapter | null>(null);
 
-  // Load persistence ONLY for Ella's data on mount
+  // 1. Initial Data Load
   useEffect(() => {
-    // 1. Check for active session
-    const savedSession = loadSession();
-    if (savedSession) {
-      setIsAuthenticated(true);
-      setCurrentUserRole(savedSession);
+    const initApp = async () => {
+      setIsLoading(true);
+      try {
+        // Load Session (Sync)
+        const savedSession = loadSession();
+        if (savedSession) {
+          setIsAuthenticated(true);
+          setCurrentUserRole(savedSession);
+          if (savedSession === 'El') {
+            setView(AppView.ADMIN_DASHBOARD);
+          } else {
+            setView(AppView.STORY);
+          }
+        }
 
-      if (savedSession === 'El') {
-        setView(AppView.ADMIN_DASHBOARD);
-      } else {
-        // Load databases for Ella
-        const loadedProgress = loadProgress();
-        const loadedJournal = loadJournal();
+        // Load Global Data (Async)
+        const [loadedSettings, loadedProgress, loadedJournal] = await Promise.all([
+          loadSettings(),
+          loadProgress(),
+          loadJournal()
+        ]);
+
+        setSettings(loadedSettings);
         setProgress(loadedProgress);
         setJournal(loadedJournal);
-        setView(AppView.STORY);
+
+      } catch (error) {
+        console.error("Initialization error:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    initApp();
 
     // Check system preference for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setDarkMode(true);
     }
+  }, []);
+
+  // 2. Realtime Subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('app_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_data' }, (payload) => {
+        const { key, value } = payload.new as any;
+        if (key === 'progress') setProgress(value);
+        if (key === 'journal') setJournal(value);
+        if (key === 'settings') setSettings(value);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Update DOM for dark mode
@@ -72,6 +111,7 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   // Save persistence on change (ONLY FOR ELLA)
+  // We keep this to sync local changes to Supabase
   useEffect(() => {
     if (currentUserRole === 'Ella') {
       saveProgress(progress);
@@ -81,17 +121,20 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setDarkMode(!darkMode);
 
-  const handleLogin = (role: UserRole) => {
+  const handleLogin = async (role: UserRole) => {
     setCurrentUserRole(role);
     setIsAuthenticated(true);
     saveSession(role); // Save session!
 
+    setIsLoading(true);
+    const [p, j] = await Promise.all([loadProgress(), loadJournal()]);
+    setProgress(p);
+    setJournal(j);
+    setIsLoading(false);
+
     if (role === 'El') {
       setView(AppView.ADMIN_DASHBOARD);
     } else {
-      // Refresh data ensures we have latest from storage
-      setProgress(loadProgress());
-      setJournal(loadJournal());
       setView(AppView.STORY);
     }
   };
@@ -126,8 +169,6 @@ const App: React.FC = () => {
     const chapter = CHAPTERS.find(c => c.id === chapterId);
     if (!chapter) return;
 
-    const settings = loadSettings();
-
     setProgress(prev => {
       const nextId = chapterId + 1;
       const isNewCompletion = !prev.completedChapters.includes(chapterId);
@@ -157,7 +198,6 @@ const App: React.FC = () => {
 
   const handleNextChapter = () => {
     const nextId = progress.currentChapterId + 1;
-    const settings = loadSettings();
 
     if (nextId <= 14 && nextId <= settings.maxUnlockableChapter) {
       if (progress.unlockedChapters.includes(nextId)) {
@@ -190,8 +230,18 @@ const App: React.FC = () => {
 
   const activeLandingChapter = CHAPTERS.find(c => c.id === progress.currentChapterId);
 
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-paper dark:bg-obsidian flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 border-4 border-romance-red border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="font-serif text-romance-red animate-pulse">Consultando el Archivo de las Almas...</p>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} settings={settings} />;
   }
 
   if (currentUserRole === 'El') {

@@ -9,42 +9,61 @@ interface AdminPanelProps {
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onLogout }) => {
     const [activeTab, setActiveTab] = useState<'settings' | 'activity'>('activity');
-    const [settings, setSettings] = useState<SystemSettings>(loadSettings());
-    const [ellaData, setEllaData] = useState<UserProgress>(loadProgress());
-    const [ellaJournal, setEllaJournal] = useState<UserJournal>(loadJournal());
+    const [settings, setSettings] = useState<SystemSettings | null>(null);
+    const [ellaData, setEllaData] = useState<UserProgress | null>(null);
+    const [ellaJournal, setEllaJournal] = useState<UserJournal | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const loadAllData = async () => {
+        const [s, p, j] = await Promise.all([
+            loadSettings(),
+            loadProgress(),
+            loadJournal()
+        ]);
+        setSettings(s);
+        setEllaData(p);
+        setEllaJournal(j);
+    };
 
     // Refresh data on mount
     useEffect(() => {
-        setEllaData(loadProgress());
-        setEllaJournal(loadJournal());
-        setSettings(loadSettings());
+        loadAllData();
     }, []);
 
-    const handleSaveSettings = () => {
-        saveSettings(settings);
-        alert("Configuración guardada correctamente.");
+    const handleSaveSettings = async () => {
+        if (!settings) return;
+        setIsSaving(true);
+        await saveSettings(settings);
+        setIsSaving(false);
+        alert("Configuración guardada en la nube correctamente.");
     };
 
-    const handleRefreshData = () => {
-        setEllaData(loadProgress());
-        setEllaJournal(loadJournal());
+    const handleRefreshData = async () => {
+        await loadAllData();
     };
 
-    const handleResetProgress = () => {
-        // Validation 1: Simple confirm
+    const handleResetProgress = async () => {
         if (window.confirm("⚠️ ¿Estás seguro de que quieres BORRAR todo el progreso de Ella?\n\nEsto eliminará:\n- Capítulos desbloqueados\n- Fragmentos recolectados\n- Diario y reflexiones\n\nEsta acción NO se puede deshacer.")) {
-            // Validation 2: Double check
             if (window.confirm("CONFIRMACIÓN FINAL:\n\n¿Realmente deseas reiniciar el viaje de Ella a cero?")) {
-                const success = resetEllaData();
+                const success = await resetEllaData();
                 if (success) {
                     alert("El progreso ha sido eliminado correctamente.");
-                    handleRefreshData(); // Update local state
+                    await handleRefreshData();
                 } else {
                     alert("Hubo un error al intentar borrar los datos.");
                 }
             }
         }
     };
+
+    if (!settings || !ellaData || !ellaJournal) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-4">
+                <div className="w-12 h-12 border-4 border-gold-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-gold-accent font-cinzel animate-pulse">Cargando datos del servidor...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-gray-200 font-sans">
